@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI 动漫生成测试工具</title>
+<style>
+:root {
+    --bg: #0a0a14;
+    --surface: rgba(255, 255, 255, 0.04);
+    --border: rgba(255, 255, 255, 0.1);
+    --text: #f0f0f5;
+    --text-dim: #a0a0c0;
+    --text-muted: #6b6b8a;
+    --primary: #8b5cf6;
+    --accent: #ec4899;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    --radius: 14px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+/* HEADER */
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+.header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.header p {
+    color: var(--text-dim);
+    font-size: 15px;
+}
+
+/* CARD */
+.card {
+    padding: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+}
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(139, 92, 246, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+.card-title {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+/* FORM */
+.form-group {
+    margin-bottom: 18px;
+}
+.form-group label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text);
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--primary);
+}
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* BUTTON */
+.btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.btn-primary {
+    background: var(--gradient);
+    color: white;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.55);
+}
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* RESULT */
+.result-section {
+    display: none;
+}
+.result-section.show {
+    display: block;
+}
+.loading {
+    text-align: center;
+    padding: 40px;
+}
+.loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(139, 92, 246, 0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading p {
+    color: var(--text-dim);
+}
+
+/* IMAGE RESULT */
+.image-result {
+    text-align: center;
+}
+.image-result img {
+    max-width: 100%;
+    border-radius: var(--radius);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+.image-info {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+.image-info .prompt {
+    font-size: 13px;
+    color: var(--text-dim);
+    word-break: break-all;
+}
+.image-info .time {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+/* PRESET TEMPLATES */
+.preset-templates {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+.preset-btn {
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+.preset-btn:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.3);
+    color: var(--text);
+}
+
+/* ERROR */
+.error-message {
+    padding: 16px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 10px;
+    color: #f87171;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+/* FOOTER */
+.footer {
+    text-align: center;
+    padding-top: 30px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎨 AI 动漫生成器</h1>
+        <p>使用 SenseNova API 生成精美动漫风格图像</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon">⚙️</div>
+            <div class="card-title">API 配置</div>
+        </div>
+        <div class="form-group">
+            <label>API 端点</label>
+            <input type="text" id="apiEndpoint" value="https://token.sensenova.cn/v1" readonly />
+        </div>
+        <div class="form-group">
+            <label>API 密钥 (已配置)</label>
+            <input type="password" id="apiKey" value="sk-THiWkvlBqHgOxAl3Yosod37uRNRMQb3i" readonly />
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon">✏️</div>
+            <div class="card-title">生成参数</div>
+        </div>
+        <div class="form-group">
+            <label>提示词 (Prompt)</label>
+            <textarea id="prompt" placeholder="输入动漫风格的描述，例如：anime girl with long pink hair, cherry blossoms, sunset, beautiful eyes, Studio Ghibli style, 4K, highly detailed"></textarea>
+        </div>
+        <div class="form-group">
+            <label>风格选择</label>
+            <select id="style">
+                <option value="anime">动漫风格 (Anime)</option>
+                <option value="ghibli">吉卜力风格 (Studio Ghibli)</option>
+                <option value="pixiv">Pixiv 风格</option>
+                <option value="cyberpunk">赛博朋克 (Cyberpunk)</option>
+                <option value="fantasy">奇幻风格 (Fantasy)</option>
+                <option value="realistic">写实风格 (Realistic)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>分辨率</label>
+            <select id="resolution">
+                <option value="512x512">512 x 512</option>
+                <option value="768x768">768 x 768</option>
+                <option value="1024x1024">1024 x 1024</option>
+                <option value="1024x1536">1024 x 1536 (竖版)</option>
+                <option value="1536x1024">1536 x 1024 (横版)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon">💡</div>
+            <div class="card-title">预设模板 (点击快速填充)</div>
+        </div>
+        <div class="preset-templates">
+            <button class="preset-btn" onclick="fillPreset('anime girl with long pink hair, cherry blossoms, sunset, beautiful eyes, Studio Ghibli style, 4K, highly detailed')">🌸 樱花少女</button>
+            <button class="preset-btn" onclick="fillPreset('cyberpunk city at night, neon lights, rain reflections, anime style, cinematic')">🌃 赛博都市</button>
+            <button class="preset-btn" onclick="fillPreset('cute cat maid character, anime style, colorful, kawaii, detailed eyes')">🐱 猫耳女仆</button>
+            <button class="preset-btn" onclick="fillPreset('fantasy castle, floating islands, dragons, magical forest, anime fantasy')">🏰 奇幻城堡</button>
+            <button class="preset-btn" onclick="fillPreset('underwater world, mermaid, bubbles, colorful coral, anime style')">🐠 海底世界</button>
+            <button class="preset-btn" onclick="fillPreset('winter landscape, snow falling, cozy cabin, anime scenery, peaceful')">❄️ 冬日雪景</button>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" id="generateBtn" onclick="generateImage()">
+        🎨 生成动漫图像
+    </button>
+
+    <div class="card result-section" id="resultSection">
+        <div class="card-header">
+            <div class="card-icon">🖼️</div>
+            <div class="card-title">生成结果</div>
+        </div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在生成图像，请稍候...</p>
+        </div>
+        <div class="image-result" id="imageResult" style="display: none;">
+            <img id="outputImage" src="" alt="生成的图像" />
+            <div class="image-info">
+                <div class="prompt" id="usedPrompt"></div>
+                <div class="time" id="generateTime"></div>
+            </div>
+        </div>
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+    </div>
+
+    <div class="footer">
+        <p>Powered by SenseNova API</p>
+    </div>
+</div>
+
+<script>
+const API_ENDPOINT = "https://token.sensenova.cn/v1";
+const API_KEY = "sk-THiWkvlBqHgOxAl3Yosod37uRNRMQb3i";
+
+function fillPreset(text) {
+    document.getElementById("prompt").value = text;
+}
+
+async function generateImage() {
+    const prompt = document.getElementById("prompt").value.trim();
+    const style = document.getElementById("style").value;
+    const resolution = document.getElementById("resolution").value;
+    
+    if (!prompt) {
+        alert("请输入提示词");
+        return;
+    }
+
+    const btn = document.getElementById("generateBtn");
+    const resultSection = document.getElementById("resultSection");
+    const loading = document.getElementById("loading");
+    const imageResult = document.getElementById("imageResult");
+    const errorMessage = document.getElementById("errorMessage");
+
+    btn.disabled = true;
+    btn.innerHTML = "生成中...";
+    resultSection.classList.add("show");
+    loading.style.display = "block";
+    imageResult.style.display = "none";
+    errorMessage.style.display = "none";
+
+    const startTime = Date.now();
+
+    try {
+        const [width, height] = resolution.split("x").map(Number);
+        
+        const requestBody = {
+            model: "image-generation",
+            prompt: `${prompt}, ${style} style, high quality, detailed, vibrant colors`,
+            width: width,
+            height: height,
+            steps: 30,
+            guidance_scale: 7.5
+        };
+
+        const response = await fetch(`${API_ENDPOINT}/images/generations`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error?.message || `HTTP error! status: ${response.status}`);
+        }
+
+        const imageUrl = data.data?.[0]?.url;
+        if (!imageUrl) {
+            throw new Error("未能获取到生成的图像");
+        }
+
+        const endTime = Date.now();
+        const duration = ((endTime - startTime) / 1000).toFixed(1);
+
+        document.getElementById("outputImage").src = imageUrl;
+        document.getElementById("usedPrompt").textContent = `提示词: ${prompt}`;
+        document.getElementById("generateTime").textContent = `生成耗时: ${duration} 秒`;
+        
+        loading.style.display = "none";
+        imageResult.style.display = "block";
+
+    } catch (error) {
+        loading.style.display = "none";
+        errorMessage.textContent = `错误: ${error.message}`;
+        errorMessage.style.display = "block";
+        console.error("生成失败:", error);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = "🎨 生成动漫图像";
+    }
+}
+</script>
+</body>
+</html>
