@@ -255,7 +255,7 @@ body {
         </div>
         <div class="form-group">
             <label>API 端点</label>
-            <input type="text" id="apiEndpoint" value="https://token.sensenova.cn/v1" readonly />
+            <input type="text" id="apiEndpoint" value="https://api.sensenova.cn/v1" />
         </div>
         <div class="form-group">
             <label>API 密钥 (已配置)</label>
@@ -339,18 +339,25 @@ body {
 </div>
 
 <script>
-const API_ENDPOINT = "https://token.sensenova.cn/v1";
-const API_KEY = "sk-THiWkvlBqHgOxAl3Yosod37uRNRMQb3i";
-
 function fillPreset(text) {
     document.getElementById("prompt").value = text;
 }
 
 async function generateImage() {
+    const apiEndpoint = document.getElementById("apiEndpoint").value.trim();
+    const apiKey = document.getElementById("apiKey").value.trim();
     const prompt = document.getElementById("prompt").value.trim();
     const style = document.getElementById("style").value;
     const resolution = document.getElementById("resolution").value;
     
+    if (!apiEndpoint) {
+        alert("请输入 API 端点");
+        return;
+    }
+    if (!apiKey) {
+        alert("请输入 API 密钥");
+        return;
+    }
     if (!prompt) {
         alert("请输入提示词");
         return;
@@ -376,17 +383,17 @@ async function generateImage() {
         
         const requestBody = {
             model: "image-generation",
-            prompt: `${prompt}, ${style} style, high quality, detailed, vibrant colors`,
+            prompt: `${prompt}, ${style} style, high quality, detailed, vibrant colors, anime aesthetic`,
             width: width,
             height: height,
             steps: 30,
             guidance_scale: 7.5
         };
 
-        const response = await fetch(`${API_ENDPOINT}/images/generations`, {
+        const response = await fetch(`${apiEndpoint}/images/generations`, {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${API_KEY}`,
+                "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(requestBody)
@@ -395,12 +402,13 @@ async function generateImage() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error?.message || `HTTP error! status: ${response.status}`);
+            const errMsg = data.error?.message || data.message || `HTTP error! status: ${response.status}`;
+            throw new Error(errMsg);
         }
 
-        const imageUrl = data.data?.[0]?.url;
+        const imageUrl = data.data?.[0]?.url || data.url;
         if (!imageUrl) {
-            throw new Error("未能获取到生成的图像");
+            throw new Error("未能获取到生成的图像。响应数据: " + JSON.stringify(data));
         }
 
         const endTime = Date.now();
