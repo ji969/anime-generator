@@ -254,12 +254,19 @@ body {
             <div class="card-title">API 配置</div>
         </div>
         <div class="form-group">
-            <label>API 端点</label>
-            <input type="text" id="apiEndpoint" value="https://api.sensenova.cn/v1" />
+            <label>API 端点 (选择或输入)</label>
+            <select id="apiEndpoint" style="margin-bottom: 10px;">
+                <option value="https://api.sensenova.cn/v1">https://api.sensenova.cn/v1</option>
+                <option value="https://api.bytedance.net/sensenova/v1">https://api.bytedance.net/sensenova/v1</option>
+                <option value="https://sensenova.bytedance.net/api/v1">https://sensenova.bytedance.net/api/v1</option>
+                <option value="https://sensenova.api.bytedance.net/v1">https://sensenova.api.bytedance.net/v1</option>
+                <option value="custom">自定义地址...</option>
+            </select>
+            <input type="text" id="customEndpoint" placeholder="输入自定义 API 端点..." style="display: none;" />
         </div>
         <div class="form-group">
-            <label>API 密钥 (已配置)</label>
-            <input type="password" id="apiKey" value="sk-THiWkvlBqHgOxAl3Yosod37uRNRMQb3i" readonly />
+            <label>API 密钥</label>
+            <input type="password" id="apiKey" value="sk-THiWkvlBqHgOxAl3Yosod37uRNRMQb3i" />
         </div>
     </div>
 
@@ -339,12 +346,24 @@ body {
 </div>
 
 <script>
+document.getElementById("apiEndpoint").addEventListener("change", function() {
+    const customInput = document.getElementById("customEndpoint");
+    if (this.value === "custom") {
+        customInput.style.display = "block";
+    } else {
+        customInput.style.display = "none";
+    }
+});
+
 function fillPreset(text) {
     document.getElementById("prompt").value = text;
 }
 
 async function generateImage() {
-    const apiEndpoint = document.getElementById("apiEndpoint").value.trim();
+    const selectEndpoint = document.getElementById("apiEndpoint").value;
+    const apiEndpoint = selectEndpoint === "custom" 
+        ? document.getElementById("customEndpoint").value.trim() 
+        : selectEndpoint.trim();
     const apiKey = document.getElementById("apiKey").value.trim();
     const prompt = document.getElementById("prompt").value.trim();
     const style = document.getElementById("style").value;
