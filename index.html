@@ -252,18 +252,27 @@ body {
     <div class="card">
         <div class="card-header">
             <div class="card-icon">⚙️</div>
-            <div class="card-title">GitHub API 配置</div>
+            <div class="card-title">GitHub Models API 配置</div>
         </div>
         <div class="info-box">
-            💡 <strong>说明：</strong>请在下方输入你的 GitHub Personal Access Token (PAT)，需要包含 <code>models:read</code> 和 <code>models:write</code> 权限。
+            💡 <strong>如何获取 API 信息？</strong><br/>
+            1. 访问 <a href="https://github.com/settings/tokens" target="_blank" style="color: #8b5cf6;">GitHub Token 设置</a><br/>
+            2. 点击 "Generate new token (classic)"<br/>
+            3. 勾选权限: <code>models:read</code> 和 <code>models:write</code><br/>
+            4. 生成后复制你的 Token
         </div>
         <div class="form-group">
-            <label>GitHub API 端点</label>
-            <input type="text" id="apiEndpoint" value="https://models.github.com/v1" readonly />
+            <label>API 端点</label>
+            <select id="apiEndpoint">
+                <option value="https://models.github.com/v1">GitHub Models API</option>
+                <option value="https://api.openai.com/v1">OpenAI API (兼容格式)</option>
+                <option value="custom">自定义端点...</option>
+            </select>
+            <input type="text" id="customEndpoint" placeholder="输入自定义 API 端点..." style="display: none; margin-top: 10px;" />
         </div>
         <div class="form-group">
-            <label>GitHub Personal Access Token</label>
-            <input type="password" id="apiKey" placeholder="输入你的 GitHub PAT..." />
+            <label>API 密钥 (GitHub PAT 或 OpenAI Key)</label>
+            <input type="password" id="apiKey" placeholder="输入你的 API Key..." />
         </div>
     </div>
 
@@ -343,19 +352,35 @@ body {
 </div>
 
 <script>
+document.getElementById("apiEndpoint").addEventListener("change", function() {
+    const customInput = document.getElementById("customEndpoint");
+    if (this.value === "custom") {
+        customInput.style.display = "block";
+    } else {
+        customInput.style.display = "none";
+    }
+});
+
 function fillPreset(text) {
     document.getElementById("prompt").value = text;
 }
 
 async function generateImage() {
-    const apiEndpoint = document.getElementById("apiEndpoint").value.trim();
+    const selectEndpoint = document.getElementById("apiEndpoint").value;
+    const apiEndpoint = selectEndpoint === "custom" 
+        ? document.getElementById("customEndpoint").value.trim() 
+        : selectEndpoint.trim();
     const apiKey = document.getElementById("apiKey").value.trim();
     const prompt = document.getElementById("prompt").value.trim();
     const style = document.getElementById("style").value;
     const resolution = document.getElementById("resolution").value;
     
+    if (!apiEndpoint) {
+        alert("请输入 API 端点");
+        return;
+    }
     if (!apiKey) {
-        alert("请输入 GitHub Personal Access Token");
+        alert("请输入 API 密钥");
         return;
     }
     if (!prompt) {
@@ -382,8 +407,8 @@ async function generateImage() {
         const [width, height] = resolution.split("x").map(Number);
         
         const requestBody = {
-            model: "DALL-E-3",
-            prompt: `${prompt}, ${style} style, high quality, detailed, vibrant colors, anime aesthetic`,
+            model: "dall-e-3",
+            prompt: `${prompt}, ${style} style, high quality, detailed, vibrant colors, anime aesthetic, 4K, masterpiece`,
             n: 1,
             size: `${width}x${height}`
         };
@@ -406,7 +431,7 @@ async function generateImage() {
 
         const imageUrl = data.data?.[0]?.url || data.url;
         if (!imageUrl) {
-            throw new Error("未能获取到生成的图像。响应数据: " + JSON.stringify(data));
+            throw new Error("未能获取到生成的图像。响应数据: " + JSON.stringify(data).substring(0, 200));
         }
 
         const endTime = Date.now();
