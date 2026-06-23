@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AI 动漫生成测试工具</title>
+<title>AI 动漫生成器 · GitHub Models API</title>
 <style>
 :root {
     --bg: #0a0a14;
@@ -35,7 +35,6 @@ body {
     margin: 0 auto;
 }
 
-/* HEADER */
 .header {
     text-align: center;
     margin-bottom: 40px;
@@ -54,7 +53,6 @@ body {
     font-size: 15px;
 }
 
-/* CARD */
 .card {
     padding: 28px;
     background: var(--surface);
@@ -83,7 +81,6 @@ body {
     font-weight: 700;
 }
 
-/* FORM */
 .form-group {
     margin-bottom: 18px;
 }
@@ -121,7 +118,6 @@ body {
     color: var(--text-muted);
 }
 
-/* BUTTON */
 .btn {
     width: 100%;
     padding: 16px;
@@ -148,7 +144,6 @@ body {
     transform: none;
 }
 
-/* RESULT */
 .result-section {
     display: none;
 }
@@ -173,7 +168,6 @@ body {
     color: var(--text-dim);
 }
 
-/* IMAGE RESULT */
 .image-result {
     text-align: center;
 }
@@ -198,7 +192,6 @@ body {
     margin-top: 8px;
 }
 
-/* PRESET TEMPLATES */
 .preset-templates {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -221,7 +214,6 @@ body {
     color: var(--text);
 }
 
-/* ERROR */
 .error-message {
     padding: 16px;
     background: rgba(239, 68, 68, 0.1);
@@ -232,7 +224,16 @@ body {
     margin-bottom: 16px;
 }
 
-/* FOOTER */
+.info-box {
+    padding: 14px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 10px;
+    color: #93c5fd;
+    font-size: 13px;
+    margin-bottom: 18px;
+}
+
 .footer {
     text-align: center;
     padding-top: 30px;
@@ -245,28 +246,24 @@ body {
 <div class="container">
     <div class="header">
         <h1>🎨 AI 动漫生成器</h1>
-        <p>使用 SenseNova API 生成精美动漫风格图像</p>
+        <p>使用 GitHub Models API 生成精美动漫风格图像</p>
     </div>
 
     <div class="card">
         <div class="card-header">
             <div class="card-icon">⚙️</div>
-            <div class="card-title">API 配置</div>
+            <div class="card-title">GitHub API 配置</div>
+        </div>
+        <div class="info-box">
+            💡 <strong>说明：</strong>请在下方输入你的 GitHub Personal Access Token (PAT)，需要包含 <code>models:read</code> 和 <code>models:write</code> 权限。
         </div>
         <div class="form-group">
-            <label>API 端点 (选择或输入)</label>
-            <select id="apiEndpoint" style="margin-bottom: 10px;">
-                <option value="https://api.sensenova.cn/v1">https://api.sensenova.cn/v1</option>
-                <option value="https://api.bytedance.net/sensenova/v1">https://api.bytedance.net/sensenova/v1</option>
-                <option value="https://sensenova.bytedance.net/api/v1">https://sensenova.bytedance.net/api/v1</option>
-                <option value="https://sensenova.api.bytedance.net/v1">https://sensenova.api.bytedance.net/v1</option>
-                <option value="custom">自定义地址...</option>
-            </select>
-            <input type="text" id="customEndpoint" placeholder="输入自定义 API 端点..." style="display: none;" />
+            <label>GitHub API 端点</label>
+            <input type="text" id="apiEndpoint" value="https://models.github.com/v1" readonly />
         </div>
         <div class="form-group">
-            <label>API 密钥</label>
-            <input type="password" id="apiKey" value="sk-THiWkvlBqHgOxAl3Yosod37uRNRMQb3i" />
+            <label>GitHub Personal Access Token</label>
+            <input type="password" id="apiKey" placeholder="输入你的 GitHub PAT..." />
         </div>
     </div>
 
@@ -277,7 +274,7 @@ body {
         </div>
         <div class="form-group">
             <label>提示词 (Prompt)</label>
-            <textarea id="prompt" placeholder="输入动漫风格的描述，例如：anime girl with long pink hair, cherry blossoms, sunset, beautiful eyes, Studio Ghibli style, 4K, highly detailed"></textarea>
+            <textarea id="prompt" placeholder="输入动漫风格的描述，例如：anime girl with long pink hair, cherry blossoms, sunset, Studio Ghibli style, 4K, highly detailed"></textarea>
         </div>
         <div class="form-group">
             <label>风格选择</label>
@@ -318,7 +315,7 @@ body {
     </div>
 
     <button class="btn btn-primary" id="generateBtn" onclick="generateImage()">
-        🎨 生成动漫图像
+        🎨 使用 GitHub Models 生成图像
     </button>
 
     <div class="card result-section" id="resultSection">
@@ -341,40 +338,24 @@ body {
     </div>
 
     <div class="footer">
-        <p>Powered by SenseNova API</p>
+        <p>Powered by GitHub Models API</p>
     </div>
 </div>
 
 <script>
-document.getElementById("apiEndpoint").addEventListener("change", function() {
-    const customInput = document.getElementById("customEndpoint");
-    if (this.value === "custom") {
-        customInput.style.display = "block";
-    } else {
-        customInput.style.display = "none";
-    }
-});
-
 function fillPreset(text) {
     document.getElementById("prompt").value = text;
 }
 
 async function generateImage() {
-    const selectEndpoint = document.getElementById("apiEndpoint").value;
-    const apiEndpoint = selectEndpoint === "custom" 
-        ? document.getElementById("customEndpoint").value.trim() 
-        : selectEndpoint.trim();
+    const apiEndpoint = document.getElementById("apiEndpoint").value.trim();
     const apiKey = document.getElementById("apiKey").value.trim();
     const prompt = document.getElementById("prompt").value.trim();
     const style = document.getElementById("style").value;
     const resolution = document.getElementById("resolution").value;
     
-    if (!apiEndpoint) {
-        alert("请输入 API 端点");
-        return;
-    }
     if (!apiKey) {
-        alert("请输入 API 密钥");
+        alert("请输入 GitHub Personal Access Token");
         return;
     }
     if (!prompt) {
@@ -401,12 +382,10 @@ async function generateImage() {
         const [width, height] = resolution.split("x").map(Number);
         
         const requestBody = {
-            model: "image-generation",
+            model: "DALL-E-3",
             prompt: `${prompt}, ${style} style, high quality, detailed, vibrant colors, anime aesthetic`,
-            width: width,
-            height: height,
-            steps: 30,
-            guidance_scale: 7.5
+            n: 1,
+            size: `${width}x${height}`
         };
 
         const response = await fetch(`${apiEndpoint}/images/generations`, {
@@ -447,7 +426,7 @@ async function generateImage() {
         console.error("生成失败:", error);
     } finally {
         btn.disabled = false;
-        btn.innerHTML = "🎨 生成动漫图像";
+        btn.innerHTML = "🎨 使用 GitHub Models 生成图像";
     }
 }
 </script>
